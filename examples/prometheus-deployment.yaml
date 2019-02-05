@@ -1,0 +1,43 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: kube-system
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      volumes:
+      - name: prometheus
+        configMap:
+          name: prometheus
+      serviceAccountName: prometheus
+      containers:
+      - image: "prom/prometheus:latest"
+        #for debugging prometheus, uncomment following line:
+        #command: ["prometheus","--config.file=/etc/prometheus/prometheus.yml","--log.level=debug"]
+        volumeMounts:
+        - name: prometheus
+          mountPath: /etc/prometheus/
+        resources:
+          limits:
+            memory: 4000Mi
+          requests:
+            cpu: 200m
+            memory: 2000Mi
+        # envFrom:
+        # - secretRef:
+        #     name: prometheus
+        imagePullPolicy: Always
+        name: prometheus
+        ports:
+        - containerPort: 9090
+          protocol: TCP
